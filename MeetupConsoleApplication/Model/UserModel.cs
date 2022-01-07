@@ -57,6 +57,17 @@ namespace SemihCelekBarisKilic.MeetupConsoleApplication.Model
         private bool _isAdmin { get; }
 
         private List<MeetupModel> _attendedMeetups;
+        
+        public UserModel( string name, string surname, string email, string passwordHash, string telNumber)
+        {
+            this._name = name;
+            this._surname = surname;
+            this._email = email;
+            this._passwordHash = passwordHash;
+            this._telNumber = telNumber;
+            _attendedMeetups = new List<MeetupModel>();
+        }
+        
 
         public UserModel(int id, string name, string surname, string email, string passwordHash, string telNumber)
         {

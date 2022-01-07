@@ -5,7 +5,7 @@ namespace SemihCelekBarisKilic.MeetupConsoleApplication.Utilities
 {
     public class MysqlDatabase : IDisposable
     {
-        public MySqlConnection MySqlConnection;
+        public readonly MySqlConnection MySqlConnection;
         private string connectionString =
             "server=127.0.0.1; database=meetupdb; uid=root; pwd=;";
 
