@@ -58,6 +58,13 @@ values ('Game Jam', 'We make games', 'Game Development', NOW());
 insert into meetups(name, description, subject, createdAt)
 values ('Guitar Workshop', 'We teach guitar', 'Music', NOW());
 
+insert into posts(title, content, author, createdAt)
+values ('Playing video games ', 'this is a post content', 1, now());
+
+insert into posts(title, content, author, createdAt)
+values ('How to make great coffee ', 'this is a post content', 1, now());
+
+
 
 drop table users;
 

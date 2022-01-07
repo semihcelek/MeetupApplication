@@ -17,7 +17,7 @@ namespace SemihCelek.MeetupConsoleApplication.Services.UserService
         public List<UserModel> FindAll()
         {
             List<UserModel> allUsers = new List<UserModel>();
-            var findAllUsersSql = "select * from users;";
+            const string findAllUsersSql = "select * from users;";
             MySqlCommand command = new MySqlCommand(findAllUsersSql, _connection);
             MySqlDataReader reader = command.ExecuteReader();
 
@@ -41,18 +41,19 @@ namespace SemihCelek.MeetupConsoleApplication.Services.UserService
         public UserModel FindOne(int id)
         {
             UserModel user = null;
-            var findUserByIdSql = "select * from users where id = " + id + ";";
+            const string findUserByIdSql = "select * from users where id =@id";
             MySqlCommand command = new MySqlCommand(findUserByIdSql, _connection);
+            command.Parameters.AddWithValue("@id", id);
             MySqlDataReader reader = command.ExecuteReader();
 
             Console.WriteLine("Single User is listed as:");
             while (reader.Read())
             {
-                user = new UserModel(Convert.ToInt32(reader[0]), reader[1].ToString(),  reader[2].ToString(),
+                user = new UserModel(Convert.ToInt32(reader[0]), reader[1].ToString(), reader[2].ToString(),
                     reader[3].ToString(), reader[4].ToString(), reader[5].ToString());
+                Console.WriteLine(user.Id + "- " + user.Name + " " + user.Surname + " " + user.TelNumber);
             }
 
-            Console.WriteLine(user.Id + "- " + user.Name + " " + user.Surname + " " + user.TelNumber);
 
             reader.Close();
             return user;
@@ -60,7 +61,7 @@ namespace SemihCelek.MeetupConsoleApplication.Services.UserService
 
         public void Create(UserModel user)
         {
-            var insertUserSql =
+            const string insertUserSql =
                 "insert into users(name, surname, email, passwordHash, isActive, isAdmin) values (@name, @surname, @email, @passwordHash, true, false);";
             try
             {
@@ -82,7 +83,7 @@ namespace SemihCelek.MeetupConsoleApplication.Services.UserService
 
         public void Update(UserModel user)
         {
-            var updateUserSql =
+            const string updateUserSql =
                 "update users set name = @name, surname = @surname, email = @email, passwordHash = @passwordHash where id=@userId;";
             try
             {
@@ -105,7 +106,7 @@ namespace SemihCelek.MeetupConsoleApplication.Services.UserService
 
         public void Delete(int id)
         {
-            var deleteUserSql = "delete from users where id = @userid";
+            const string deleteUserSql = "delete from users where id = @userid";
 
             try
             {

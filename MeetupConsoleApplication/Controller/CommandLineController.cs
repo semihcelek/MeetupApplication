@@ -1,5 +1,6 @@
 using System;
 using SemihCelek.MeetupConsoleApplication.Services.MeetupService;
+using SemihCelek.MeetupConsoleApplication.Services.PostService;
 using SemihCelek.MeetupConsoleApplication.Services.UserService;
 
 namespace SemihCelek.MeetupConsoleApplication.Controller
@@ -8,11 +9,13 @@ namespace SemihCelek.MeetupConsoleApplication.Controller
     {
         private readonly UserOperationsController _userOperationsController;
         private readonly MeetupOperationsController _meetupOperationsController;
+        private readonly PostOperationsController _postOperationsController;
 
-        public CommandLineController(MeetupService meetupService, UserService userService)
+        public CommandLineController(MeetupService meetupService, UserService userService, PostService postService)
         {
             _meetupOperationsController = new MeetupOperationsController(meetupService);
             _userOperationsController = new UserOperationsController(userService);
+            _postOperationsController = new PostOperationsController(postService);
         }
 
 
@@ -24,9 +27,9 @@ namespace SemihCelek.MeetupConsoleApplication.Controller
             Console.WriteLine(
                 "Press (U) For All User Operations.\n" +
                 "Press (M) For All Meetup Operations.\n" +
+                "Press (P) For All Post Operations.\n" +
                 "Press (Q) For Exit.\n"
             );
-
 
             var argumentSelection = Console.ReadKey();
 
@@ -39,6 +42,9 @@ namespace SemihCelek.MeetupConsoleApplication.Controller
                         break;
                     case ConsoleKey.M:
                         _meetupOperationsController.MeetupOperations();
+                        break;
+                    case ConsoleKey.P:
+                        _postOperationsController.PostOperations();
                         break;
                 }
             }

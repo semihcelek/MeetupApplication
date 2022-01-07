@@ -7,7 +7,7 @@ namespace SemihCelek.MeetupConsoleApplication.Services.MeetupService
 {
     public class MysqlMeetupAccess : IMeetupDbAccess
     {
-        private MySqlConnection _connection;
+        private readonly MySqlConnection _connection;
 
         public MysqlMeetupAccess(MySqlConnection dbInstance)
         {
@@ -18,7 +18,7 @@ namespace SemihCelek.MeetupConsoleApplication.Services.MeetupService
         public List<MeetupModel> FindAll()
         {
             List<MeetupModel> allMeetups = new List<MeetupModel>();
-            var findAllMeetupSql = "select * from meetups;";
+            const string findAllMeetupSql = "select * from meetups;";
             MySqlCommand command = new MySqlCommand(findAllMeetupSql, _connection);
             MySqlDataReader reader = command.ExecuteReader();
 
@@ -43,7 +43,7 @@ namespace SemihCelek.MeetupConsoleApplication.Services.MeetupService
         public MeetupModel FindOne(int id)
         {
             MeetupModel meetup = null;
-            var findMeetupByIdSql = "select * from meetups where id=@id;";
+            const string findMeetupByIdSql = "select * from meetups where id=@id;";
             MySqlCommand command = new MySqlCommand(findMeetupByIdSql, _connection);
             command.Parameters.AddWithValue("@id", id);
             MySqlDataReader reader = command.ExecuteReader();
@@ -52,14 +52,17 @@ namespace SemihCelek.MeetupConsoleApplication.Services.MeetupService
             {
                 meetup = new MeetupModel(Convert.ToInt32(reader[0]), reader[1].ToString(), reader[2].ToString(),
                     reader[3].ToString());
+                Console.WriteLine($"{meetup.Id}- {meetup.Description} {meetup.Subject}");
+
             }
+
             reader.Close();
             return meetup;
         }
 
         public void Create(MeetupModel meetup)
         {
-            var insertMeetupSql =
+            const string insertMeetupSql =
                 "insert into meetups(name, description, subject, createdAt) values (@name, @description, @subject, NOW())";
             try
             {
@@ -79,7 +82,7 @@ namespace SemihCelek.MeetupConsoleApplication.Services.MeetupService
 
         public void Update(MeetupModel meetup)
         {
-            var updateMeetupSql =
+            const string updateMeetupSql =
                 "update meetups set name =@name,description =  @description, subject =  @subject where id=@meetupId;";
             try
             {
@@ -100,7 +103,7 @@ namespace SemihCelek.MeetupConsoleApplication.Services.MeetupService
 
         public void Delete(int id)
         {
-            var deleteMeetupSql = "delete from meetups where id = @meetupId";
+            const string deleteMeetupSql = "delete from meetups where id = @meetupId";
 
             try
             {
