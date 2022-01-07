@@ -1,7 +1,6 @@
-using System;
-using SemihCelekBarisKilic.MeetupConsoleApplication.Model;
+using SemihCelek.MeetupConsoleApplication.Model;
 
-namespace SemihCelekBarisKilic.MeetupConsoleApplication.Services.UserService
+namespace SemihCelek.MeetupConsoleApplication.Services.UserService
 {
     public class UserService
     {
@@ -9,7 +8,7 @@ namespace SemihCelekBarisKilic.MeetupConsoleApplication.Services.UserService
 
         public UserService(IUserDbAccess dbInstance)
         {
-            this._dbInstance = dbInstance;
+            _dbInstance = dbInstance;
         }
 
         public void GetAllUsers()
@@ -22,14 +21,16 @@ namespace SemihCelekBarisKilic.MeetupConsoleApplication.Services.UserService
             _dbInstance.FindOne(id);
         }
 
-        public void CreateUser(UserModel user)
+        public void CreateUser(string name, string surname, string email, string password, string telNumber)
         {
+            var user = new UserModel(name, surname, email, password, telNumber);
             _dbInstance.Create(user);
         }
 
-        public void UpdateUser(UserModel user)
+        public void UpdateUser(string name, string surname, string email, string password, string telNumber)
         {
-            throw new NotImplementedException();
+            var user = new UserModel(name, surname, email, password, telNumber);
+            _dbInstance.Update(user);
         }
 
         public void DeleteUser(int userId)

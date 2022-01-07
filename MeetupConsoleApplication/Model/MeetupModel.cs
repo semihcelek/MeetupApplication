@@ -1,10 +1,18 @@
 using System;
 using System.Collections.Generic;
 
-namespace SemihCelekBarisKilic.MeetupConsoleApplication.Model
+namespace SemihCelek.MeetupConsoleApplication.Model
 {
     public class MeetupModel
     {
+        private int _id;
+
+        public int Id
+        {
+            get => _id;
+            set => _id = value;
+        }
+
         private string _name;
 
         public string Name
@@ -21,12 +29,30 @@ namespace SemihCelekBarisKilic.MeetupConsoleApplication.Model
             set => _description = value;
         }
 
+        private string _subject;
+
+        public string Subject
+        {
+            get => _subject;
+            set => _subject = value;
+        }
+        
         private List<UserModel> _meetupAttendies;
 
-        public MeetupModel(string name, string description)
+        public MeetupModel(string name, string description, string subject)
         {
-            this._name = name;
-            this._description = description;
+            _name = name;
+            _description = description;
+            _subject = subject;
+            _meetupAttendies = new List<UserModel>();
+        }
+        
+        public MeetupModel(int id,string name, string description, string subject)
+        {
+            _id = id;
+            _name = name;
+            _description = description;
+            _subject = subject;
             _meetupAttendies = new List<UserModel>();
         }
 

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using MySql.Data.MySqlClient;
-using SemihCelekBarisKilic.MeetupConsoleApplication.Model;
+using SemihCelek.MeetupConsoleApplication.Model;
 
-namespace SemihCelekBarisKilic.MeetupConsoleApplication.Services.UserService
+namespace SemihCelek.MeetupConsoleApplication.Services.UserService
 {
     public class MysqlUserAccess : IUserDbAccess
     {
@@ -11,7 +11,7 @@ namespace SemihCelekBarisKilic.MeetupConsoleApplication.Services.UserService
 
         public MysqlUserAccess(MySqlConnection dbInstance)
         {
-            this._connection = dbInstance;
+            _connection = dbInstance;
         }
 
         public List<UserModel> FindAll()
@@ -48,9 +48,11 @@ namespace SemihCelekBarisKilic.MeetupConsoleApplication.Services.UserService
             Console.WriteLine("Single User is listed as:");
             while (reader.Read())
             {
-                user = new UserModel(Convert.ToInt32(reader[0]), reader[1].ToString(), reader[2].ToString(),
+                user = new UserModel(Convert.ToInt32(reader[0]), reader[1].ToString(),  reader[2].ToString(),
                     reader[3].ToString(), reader[4].ToString(), reader[5].ToString());
             }
+
+            Console.WriteLine(user.Id + "- " + user.Name + " " + user.Surname + " " + user.TelNumber);
 
             reader.Close();
             return user;
@@ -117,6 +119,16 @@ namespace SemihCelekBarisKilic.MeetupConsoleApplication.Services.UserService
                 Console.WriteLine(e);
                 throw;
             }
+        }
+
+        public void AttendMeetup(MeetupModel meetup)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void LeaveMeetup(MeetupModel meetup)
+        {
+            throw new NotImplementedException();
         }
     }
 }

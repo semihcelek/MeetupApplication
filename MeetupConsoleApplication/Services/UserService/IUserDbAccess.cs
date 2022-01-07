@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using SemihCelekBarisKilic.MeetupConsoleApplication.Model;
+using SemihCelek.MeetupConsoleApplication.Model;
 
-namespace SemihCelekBarisKilic.MeetupConsoleApplication.Services.UserService
+namespace SemihCelek.MeetupConsoleApplication.Services.UserService
 {
     public interface IUserDbAccess
     {
@@ -11,5 +11,8 @@ namespace SemihCelekBarisKilic.MeetupConsoleApplication.Services.UserService
         void Create(UserModel user);
         void Update(UserModel user);
         void Delete(int id);
+
+        void AttendMeetup(MeetupModel meetup);
+        void LeaveMeetup(MeetupModel meetup);
     }
 }

@@ -1,7 +1,6 @@
-using System;
 using System.Collections.Generic;
 
-namespace SemihCelekBarisKilic.MeetupConsoleApplication.Model
+namespace SemihCelek.MeetupConsoleApplication.Model
 {
     public class UserModel
     {
@@ -57,26 +56,26 @@ namespace SemihCelekBarisKilic.MeetupConsoleApplication.Model
         private bool _isAdmin { get; }
 
         private List<MeetupModel> _attendedMeetups;
-        
-        public UserModel( string name, string surname, string email, string passwordHash, string telNumber)
+
+        public UserModel(string name, string surname, string email, string passwordHash, string telNumber)
         {
-            this._name = name;
-            this._surname = surname;
-            this._email = email;
-            this._passwordHash = passwordHash;
-            this._telNumber = telNumber;
+            _name = name;
+            _surname = surname;
+            _email = email;
+            _passwordHash = passwordHash;
+            _telNumber = telNumber;
             _attendedMeetups = new List<MeetupModel>();
         }
-        
+
 
         public UserModel(int id, string name, string surname, string email, string passwordHash, string telNumber)
         {
-            this._id = id;
-            this._name = name;
-            this._surname = surname;
-            this._email = email;
-            this._passwordHash = passwordHash;
-            this._telNumber = telNumber;
+            _id = id;
+            _name = name;
+            _surname = surname;
+            _email = email;
+            _passwordHash = passwordHash;
+            _telNumber = telNumber;
             _attendedMeetups = new List<MeetupModel>();
         }
 

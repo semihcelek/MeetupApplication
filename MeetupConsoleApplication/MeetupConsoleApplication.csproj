@@ -4,12 +4,8 @@
         <OutputType>Exe</OutputType>
         <TargetFramework>net5.0</TargetFramework>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-        <RootNamespace>SemihCelekBarisKilic.MeetupConsoleApplication</RootNamespace>
+        <RootNamespace>SemihCelek.MeetupConsoleApplication</RootNamespace>
     </PropertyGroup>
-
-    <ItemGroup>
-      <Folder Include="Controller" />
-    </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="MySql.Data" Version="8.0.27" />

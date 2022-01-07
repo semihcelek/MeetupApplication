@@ -1,7 +1,7 @@
 using System;
 using MySql.Data.MySqlClient;
 
-namespace SemihCelekBarisKilic.MeetupConsoleApplication.Utilities
+namespace SemihCelek.MeetupConsoleApplication.Utilities
 {
     public class MysqlDatabase : IDisposable
     {
@@ -13,8 +13,8 @@ namespace SemihCelekBarisKilic.MeetupConsoleApplication.Utilities
         {
             try
             {
-                this.MySqlConnection = new MySqlConnection(connectionString);
-                this.MySqlConnection.Open();
+                MySqlConnection = new MySqlConnection(connectionString);
+                MySqlConnection.Open();
                 Console.WriteLine("Trying to connect...");
             }
             catch (MySqlException e)
