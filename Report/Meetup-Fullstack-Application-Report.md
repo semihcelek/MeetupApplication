@@ -85,6 +85,7 @@ The end points of the api are listed as;
 
 The api is built on top of a dotnet entity framework and uses Sql database to persist the data and it's users.
 
+## Api Code Analyze
 I want to start with the domain of the objects:
 
 Post Model: 
@@ -385,6 +386,272 @@ public class IdentityService : IIdentityService
         }
     }
 ```
+
+Last note, because api and client exist differently, we had to enable Cors to exchange json objects and create connection between client and the api.
+
+## Client Code Analyze
+
+On the client side React Framework and ecosystem is used for creating dynamic application. Routing, Forms, DataFetching and State Management are the main topics of frontend.
+
+Let's Begin with the React-Router;
+
+```js
+const Router = () => {
+  const user = useUserStore((state) => state.user);
+  return (
+    <div>
+      <BrowserRouter>
+        <div>
+          <div className="navbar navbar-expand fixed-top navbar-light bg-light">
+            <div className="container-fluid">
+              <h3 className="display-8 primary">Meetup Application</h3>
+              <ul className="navbar-nav">
+                <li className="nav-item m-2">
+                  <Link to="/" className="navlink display-6" >Home</Link>
+                </li>
+                <li className="nav-item  m-2">
+                  <Link to="/posts" className="navlink display-6">Posts</Link>
+                </li>
+
+                // In the here we render different routes if a user token exist.
+                {user.token ? (
+                  <li className="nav-item  m-2">
+                    <Link to="/home" className="navlink display-6">{user.email}</Link>
+                  </li>
+                ) : (<>
+                    <li className="nav-item  m-2">
+                      <Link to="/login" className="navlink display-6">Login</Link>
+                    </li>
+                    <li className="nav-item  m-2">
+                      <Link to="/register" className="navlink display-6">Register</Link>
+                    </li>
+                    </>
+                )}
+              </ul>
+            </div>
+          </div>
+
+          <Switch>
+            <Route path="/posts/:id">
+              <PostPage />
+            </Route>
+            <Route path="/user/:username">
+              <ProfilePage />
+            </Route>
+            <Route path="/home">
+              <UserHomePage />
+            </Route>
+            <Route path="/register">
+              <RegisterPage />
+            </Route>
+            <Route path="/login">
+              <LoginPage />
+            </Route>
+            <Route path="/">
+              <PostsPage />
+            </Route>
+          </Switch>
+        </div>
+      </BrowserRouter>
+    </div>
+  );
+};
+```
+
+In here, we create register component to enable user registering. Formik library is used to simplify forms.
+
+```js
+const Register = () => {
+  const history = useHistory();
+  const handleSubmit = async (values, { setSubmitting }) => {
+    const response = await registerUser(values);
+    console.log(response);
+    setSubmitting(false);
+    if (response) {
+      history.push("/");
+    }
+  };
+
+  return (
+    <div className="container mt-5 m-5 p-5 ">
+      <h3>Register</h3>
+      <Formik
+        initialValues={{
+          email: "",
+          password: "",
+        }}
+        onSubmit={handleSubmit}
+      >
+        <Form>
+          <label className="form-label" >email:</label>
+          <Field className="form-control" name="email" type="email" />
+
+          <label className="form-label">password</label>
+          <Field className="form-control" name="password" type="password" />
+          <button className="mt-4 btn btn-primary" type="submit">register</button>
+        </Form>
+      </Formik>
+    </div>
+  );
+};
+```
+
+I used the popular fetch library axios to simplify fetching process 
+
+```js
+export const registerUser = async (values) => {
+  const response = await axios.post(
+    `${process.env.REACT_APP_API_URL}/user/register`,
+    values
+  );
+  return response.data;
+};
+```
+
+Continuing with main page where we display post, we write simple lamda map function to render each post which is requested from the api.
+Also, I wrote custom useFetch hook for simplifying the fetching action.
+
+```js
+const PostsPage = () => {
+  const { data, isloading, error } = useFetch("/post/all");
+
+  return (
+    <div className="container-xl p-5">
+      <NewPost />
+      {isloading ? (
+        <div>load...</div>
+      ) : (
+        data.map((story) => (
+          <div className="row" key={story.id}>
+            <Post
+              id={story.id}
+              title={story.title}
+              content={story.content}
+              author={story.author}
+            />
+          </div>
+        ))
+      )}
+    </div>
+  );
+};
+
+// Post Component
+const Post = ({ id, title, content, author }) => {
+  return (
+    <div className="container-sm" >
+      <div className="card col">
+        <h3 className="card-title" >{title}</h3>
+        <p className="card-text" > {content}</p>
+        <h6 className="card-subtitle mb-2 text-muted">{author}</h6>
+        <button className="btn btn-danger " onClick={() => handleDeleteButtonClick(id)}>delete Post</button>
+      </div>
+    </div>
+  );
+};
+
+const handleDeleteButtonClick = async (id) => {
+  await deletePost(id);
+}
+
+const fetch = async (url) => {
+  const response = await axios.get(`${process.env.REACT_APP_API_URL}${url}`);
+  console.log(response.data);
+  return response.data;
+};
+
+export const useFetch = (url) => {
+  const { data, error } = useSWR(url, fetch);
+
+  return {
+    data: data,
+    isloading: !error && !data,
+    error: error,
+  };
+};
+```
+
+At the last, in order to manage the application state, I used a state management library called zustand, which is based on Redux. The benefit of zustand over redux is, zustand reduces the boilerplate of redux and eases the use of state management.
+
+Here is user state;
+
+
+```js
+import create from "zustand";
+import { devtools } from "zustand/middleware";
+import { getLocalUser } from "../services/user-service";
+
+const useUserStore = create(
+  devtools((set) => ({
+    // calling a function to initialize the state feels wrong, search for it.
+    user: getLocalUser(),
+    setUser: (user) => set((state) => ({ ...state, user: user })),
+    removeUser: () => set({ user: {} }),
+  }))
+);
+
+export { useUserStore };
+```
+Also User Service for handling user requests and persistance on the local storage;
+
+```js
+import axios from "axios";
+
+export const setToken = (userObj) => {
+  const token = `Bearer ${userObj.token}`;
+  return token;
+};
+
+export const loginUser = async (values) => {
+  const response = await axios.post(
+    `${process.env.REACT_APP_API_URL}/user/login`,
+    values
+  );
+  console.log(response.data);
+  if (response.data) {
+    return response.data;
+  } else {
+    return null;
+  }
+};
+
+export const registerUser = async (values) => {
+  const response = await axios.post(
+    `${process.env.REACT_APP_API_URL}/user/register`,
+    values
+  );
+  return response.data;
+};
+
+export const getLocalUser = () => {
+  const getLocalSavedUser = window.localStorage.getItem("social-app-user");
+  if (getLocalSavedUser) {
+    const user = JSON.parse(getLocalSavedUser);
+    console.log(user);
+    return user;
+  } else {
+    return {};
+  }
+};
+
+export const saveLocalUser = (userObj) => {
+  const saveUser = window.localStorage.setItem(
+    "social-app-user",
+    JSON.stringify(userObj)
+  );
+  console.log(saveUser);
+};
+
+export const removeSavedUser = () => {
+  window.localStorage.removeItem("social-app-user");
+};
+```
+
+At the final I used Bootstrap 5 css classes for appearance of the application.
+
+# Final Thoughts
+
+Meetup Application project is full stack application which makes use of fully funtional Restful Api that persists its data to realtime database, handles user registarations and logins, dynamicly creates endpoints for unique ids. Client side of the project also lives entirely separate from api and dynamicly comminucates with api to creating unique experience for each user.
 
 
 
