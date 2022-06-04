@@ -1,9 +1,9 @@
 ---
-title: "Meetup Command Line Application"
+title: "Meetup Web Application"
 author: [M. Semih Celek, 2018100075]
 date: "2022-01-08"
 subject: "Meetup .Net Application"
-keywords: [.Net, Mysql, Database, Command Line]
+keywords: [.Net, Mysql, Database, React, Entity Framework]
 subtitle: "Bogazici University 2022"
 lang: "en"
 titlepage: true
@@ -120,5 +120,271 @@ Meetup Model;
     }
 ```
 
-These are the main dto's to identity the objects of application. 
+These are the main dto's to identity the objects of application and they are stored on domain folder.
+
+Now let's look at the Microsoft entity framework database implementation.
+
+```csharp
+    public class DataContext : IdentityDbContext
+    {
+        public DataContext(DbContextOptions<DataContext> options)
+            : base(options)
+        {
+
+        }
+
+        public DbSet<PostModel> PostDataContext { get; set; }
+        public DbSet<MeetupModel> MeetupDataContext { get; set; }
+    }
+```
+
+With our models and DbSet types, we can easily generate migration code for desired database, then we run those migration schemes with dotnet-ef commanline tool. Now we have database with tables and relations. Entity Framework really simplifies this process. 
+
+Now let's examine the controllers;
+
+```csharp
+ public class PostController : Controller
+    {
+        // Services of the controllers are abstracted with interfaces and they are injected 
+        // in the run time.
+        private readonly IPostService _postService;
+
+        public PostController(IPostService postService)
+        {
+            // Post service dependency is injected. 
+            _postService = postService;
+        }
+
+        [HttpGet(ApiRouter.Post.GetAll)]
+        public async Task<IActionResult> GetAllPosts()
+        {
+            return Ok(await _postService.GetAllPostsAsync());
+        }
+
+        [HttpGet(ApiRouter.Post.Get)]
+        public async Task<IActionResult> GetOnePost([FromRoute] int id)
+        {
+            return Ok(await _postService.GetPostAsync(id));
+        }
+
+        [HttpPost(ApiRouter.Post.Create)]
+        public async Task<IActionResult> CreatePost([FromBody] PostModel postModel)
+        {
+            string baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
+            string location = baseUrl + "/" + ApiRouter.Post.Get.Replace("{id}", postModel.Title);
+
+            await _postService.CreatePostAsync(postModel);
+
+            return Created(location, postModel);
+        }
+
+        [HttpGet(ApiRouter.Post.Delete)]
+        public async Task<IActionResult> DeletePost([FromRoute] int id)
+        {
+            return Ok(await _postService.DeletePostAsync(id));
+        }
+    }
+```
+
+Get & Post request types are used for creating controllers and async methods are adopted for better performance.
+
+Now let's look the IService and Service implementations;
+
+```csharp
+    public interface IMeetupService // interface that controllers use.
+    {
+        Task<List<MeetupModel>> GetAllMeetupAsync();
+        Task<MeetupModel> GetMeetupAsync(int id);
+        Task<bool> CreateMeetupAsync(MeetupModel meetupModel);
+        Task<bool> DeleteMeetupAsync(int id);
+    }
+```
+
+```csharp
+public class MeetupService : IMeetupService // Concrete Service Implementation
+    {
+        private readonly DataContext _dataContext;
+
+        public MeetupService(DataContext dataContext)
+        {
+            _dataContext = dataContext;
+        }
+
+        public async Task<List<MeetupModel>> GetAllMeetupAsync()
+        {
+            return await _dataContext.MeetupDataContext.ToListAsync();
+        }
+
+        public async Task<MeetupModel> GetMeetupAsync(int id)
+        {
+            return await _dataContext.MeetupDataContext.FirstOrDefaultAsync(m => m.Id == id);
+        }
+
+        public async Task<bool> CreateMeetupAsync(MeetupModel meetupModel)
+        {
+            await _dataContext.MeetupDataContext.AddAsync(meetupModel);
+            var created = await _dataContext.SaveChangesAsync();
+            return created > 0;
+        }
+
+        public async Task<bool> DeleteMeetupAsync(int id)
+        {
+            MeetupModel meetupToDelete = await GetMeetupAsync(id);
+            _dataContext.MeetupDataContext.Remove(meetupToDelete);
+            await _dataContext.SaveChangesAsync();
+            return true;
+        }
+    }
+```
+
+With this simple abstaction we can completely decouple services with controllers.
+
+In this project I decided to implement authentication and authorization for user and I did this with using JsonWebToken authentication
+
+Configuration for JWT;
+
+```csharp
+    JwtSettings jwtSettings = new JwtSettings();
+    configuration.Bind(nameof(jwtSettings),jwtSettings);
+            
+    services.AddSingleton(jwtSettings);
+
+    services.AddScoped<IIdentityService, IdentityService>();
+
+    services.AddAuthentication(x =>
+    {
+        x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        x.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+        x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    }).AddJwtBearer(x =>
+    {
+        x.SaveToken = true;
+        x.TokenValidationParameters = new TokenValidationParameters
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSettings.Secret)),
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            RequireExpirationTime = false,
+            ValidateLifetime = true
+        };
+    });
+```
+
+And User Login and registration service and controllers;
+
+```csharp
+public class IdentityService : IIdentityService
+    {
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly JwtSettings _jwtSettings;
+
+        public IdentityService(UserManager<IdentityUser> userManager, JwtSettings jwtSettings)
+        {
+            _userManager = userManager;
+            _jwtSettings = jwtSettings;
+        }
+
+        public async Task<AuthenticationResult> RegisterAsync(string email, string password)
+        {
+            IdentityUser existingUser = await _userManager.FindByEmailAsync(email);
+
+            if (existingUser is not null)
+            {
+                return new AuthenticationResult
+                {
+                    ErrorMessage = "User already exist."
+                };
+            }
+
+            IdentityUser newUser = new IdentityUser
+            {
+                Email = email,
+                UserName = email
+            };
+
+            IdentityResult createdUser = await _userManager.CreateAsync(newUser, password);
+
+            if (!createdUser.Succeeded)
+            {
+                return new AuthenticationResult
+                {
+                    ErrorMessage = createdUser.Errors.ToString()
+                };
+            }
+
+            JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
+            byte[] key = Encoding.ASCII.GetBytes(_jwtSettings.Secret);
+
+            SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(JwtRegisteredClaimNames.Sub, newUser.Email),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                    new Claim(JwtRegisteredClaimNames.Email, newUser.Email),
+                    new Claim("id", newUser.Id)
+                }),
+                Expires = DateTime.UtcNow.AddDays(30),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return new AuthenticationResult
+            {
+                Success = true,
+                Token = tokenHandler.WriteToken(token)
+            };
+        }
+
+        public async Task<AuthenticationResult> LoginAsync(string email, string password)
+        {
+            IdentityUser user = await _userManager.FindByEmailAsync(email);
+
+            if (user is null)
+            {
+                return new AuthenticationResult
+                {
+                    ErrorMessage = "User does not exist"
+                };
+            }
+
+            bool userHasValidPassword = await _userManager.CheckPasswordAsync(user, password);
+
+            if (!userHasValidPassword)
+            {
+                return new AuthenticationResult
+                {
+                    ErrorMessage = "Either username or password is wrong"
+                };
+            }
+
+            JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
+            byte[] key = Encoding.ASCII.GetBytes(_jwtSettings.Secret);
+
+            SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                    new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                    new Claim("id", user.Id)
+                }),
+                Expires = DateTime.UtcNow.AddDays(30),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256Signature)
+            };
+            SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return new AuthenticationResult
+            {
+                Success = true,
+                Token = tokenHandler.WriteToken(token)
+            };
+        }
+    }
+```
+
+
 
